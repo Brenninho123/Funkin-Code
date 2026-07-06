@@ -8,18 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
     <style>
         :root {
-            --bg-color: #1a1a24;
-            --sidebar-color: #111116;
+            --bg-color: #0e0e13;
+            --sidebar-color: #15151f;
+            --tab-bar-color: #1a1a26;
             --accent-color: #ff007f;
-            --text-color: #ffffff;
-            --terminal-color: #0c0c0f;
+            --accent-glow: #00ffff;
+            --text-color: #f0f0f5;
+            --terminal-color: #050508;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
         body {
@@ -33,55 +35,64 @@
 
         header {
             background-color: var(--sidebar-color);
-            padding: 10px 20px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid var(--accent-color);
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+            z-index: 10;
         }
 
         .logo {
-            font-weight: bold;
-            font-size: 1.2rem;
+            font-weight: 900;
+            font-size: 1.3rem;
             color: var(--accent-color);
-            text-shadow: 2px 2px #00ffff;
+            text-shadow: 2px 2px 0px var(--accent-glow);
+            letter-spacing: 1px;
         }
 
         .actions button {
-            background-color: #222;
+            background-color: #252538;
             color: white;
-            border: 1px solid #444;
-            padding: 6px 12px;
-            margin-left: 5px;
+            border: 1px solid #3d3d5c;
+            padding: 8px 16px;
+            margin-left: 8px;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
             font-weight: bold;
-            transition: 0.2s;
+            transition: all 0.2s ease;
         }
 
         .actions button:hover {
             background-color: var(--accent-color);
             border-color: var(--accent-color);
+            box-shadow: 0 0 8px var(--accent-color);
+            transform: translateY(-1px);
         }
 
         .main-container {
             display: flex;
             flex: 1;
-            height: calc(100vh - 150px);
+            height: calc(100vh - 170px);
         }
 
         sidebar {
-            width: 220px;
+            width: 240px;
             background-color: var(--sidebar-color);
-            border-right: 1px solid #2d2d3d;
-            padding: 15px;
+            border-right: 1px solid #252538;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         sidebar h3 {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
-            color: #888;
-            margin-bottom: 10px;
+            color: #6272a4;
+            letter-spacing: 1px;
+            padding-left: 5px;
         }
 
         .file-list {
@@ -89,52 +100,117 @@
         }
 
         .file-item {
-            padding: 8px;
+            padding: 10px 12px;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 0.9rem;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .file-item:hover {
-            background-color: #252533;
+            background-color: #222233;
+            color: var(--accent-glow);
         }
 
-        .file-item.active {
-            background-color: #2d2d3d;
-            border-left: 3px solid var(--accent-color);
+        .workspace-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #282a36;
+        }
+
+        /* Sistema de Abas (Tabs) */
+        .tabs-bar {
+            background-color: var(--tab-bar-color);
+            display: flex;
+            border-bottom: 1px solid #252538;
+            height: 35px;
+        }
+
+        .tab {
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            background-color: #12121a;
+            color: #7d7d9d;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-right: 1px solid #1a1a26;
+            height: 100%;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background-color: #181824;
+            color: white;
+        }
+
+        .tab.active {
+            background-color: #282a36;
+            color: var(--text-color);
+            border-top: 2px solid var(--accent-color);
+            font-weight: 600;
         }
 
         .editor-container {
             flex: 1;
+            position: relative;
+        }
+
+        .CodeMirror {
+            position: absolute;
+            top: 0; bottom: 0; left: 0; right: 0;
+            height: 100% !important;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .terminal-panel {
+            height: 120px;
+            background-color: var(--terminal-color);
+            border-top: 2px solid #252538;
             display: flex;
             flex-direction: column;
         }
 
-        .CodeMirror {
-            height: 100% !important;
-            font-size: 14px;
+        .terminal-header {
+            background-color: #09090d;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #6272a4;
+            font-weight: bold;
+            border-bottom: 1px solid #15151f;
         }
 
-        .terminal {
-            height: 100px;
-            background-color: var(--terminal-color);
-            border-top: 2px solid #2d2d3d;
-            padding: 10px;
-            font-family: 'Courier New', Courier, monospace;
+        .terminal-body {
+            flex: 1;
+            padding: 10px 15px;
+            font-family: 'Consolas', monospace;
             font-size: 0.85rem;
-            color: #00ffcc;
+            color: #50fa7b;
             overflow-y: auto;
+            white-space: pre-wrap;
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #15151f; }
+        ::-webkit-scrollbar-thumb { background: #2d2d3f; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo">🎤 FUNKIN CODE v0.1</div>
+        <div class="logo">🎤 FUNKIN CODE</div>
         <div class="actions">
-            <button onclick="saveFile()">💾 Save</button>
-            <button onclick="runMod()" style="color: #00ffcc;">▶️ Run Mod (Haxe/Lime)</button>
+            <button onclick="saveCurrentFile()">💾 Save File</button>
+            <button onclick="runModProject()" style="color: var(--accent-glow);">▶100 Run Mod (Lime)</button>
         </div>
     </header>
 
@@ -142,89 +218,125 @@
         <sidebar>
             <h3>Project Files</h3>
             <ul class="file-list">
-                <li id="file-PlayState" class="file-item active" onclick="changeFile('PlayState.hx')">📄 PlayState.hx</li>
-                <li id="file-custom_events" class="file-item" onclick="changeFile('custom_events.lua')">📄 custom_events.lua</li>
-                <li id="file-Project" class="file-item" onclick="changeFile('Project.xml')">⚙️ Project.xml</li>
+                <li class="file-item" onclick="openFile('PlayState.hx')">🧡 PlayState.hx</li>
+                <li class="file-item" onclick="openFile('custom_events.lua')">💙 custom_events.lua</li>
+                <li class="file-item" onclick="openFile('Project.xml')">⚙️ Project.xml</li>
             </ul>
         </sidebar>
 
-        <div class="editor-container">
-            <textarea id="code-editor">
-class PlayState extends MusicBeatState 
-{
-    override function create() 
-    {
-        super.create();
-        trace("Funkin Code loaded successfully!");
-    }
-}</textarea>
+        <div class="workspace-container">
+            <div class="tabs-bar" id="tabs-container"></div>
+            <div class="editor-container">
+                <textarea id="code-editor"></textarea>
+            </div>
         </div>
     </div>
 
-    <div class="terminal" id="output-log">
-        [System] Funkin Code started. Awaiting C++ backend...
+    <div class="terminal-panel">
+        <div class="terminal-header">Console Output</div>
+        <div class="terminal-body" id="output-log">[System] Funkin Code Engine v0.1 ready. Pipeline waiting...</div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/haxe/haxe.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/lua/lua.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
 
     <script>
-        let currentFile = "PlayState.hx";
+        // Banco de dados em memória simulando arquivos abertos
+        const fileVirtualFS = {
+            "PlayState.hx": "class PlayState extends MusicBeatState \n{\n    override function create() \n    {\n        super.create();\n        trace('Funkin Code: PlayState Loaded!');\n    }\n}",
+            "custom_events.lua": "function onCreate()\n    -- Triggered when the script initializes\n    trace('Lua event framework initialized');\nend",
+            "Project.xml": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<project>\n    <meta title=\"Funkin Code Target Mod\" package=\"com.funkincode.mod\" />\n</project>"
+        };
+
+        let activeFile = "PlayState.hx";
+        let openTabs = ["PlayState.hx", "custom_events.lua", "Project.xml"];
+
         const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
             lineNumbers: true,
             theme: "dracula",
-            mode: "haxe"
+            mode: "haxe",
+            indentUnit: 4,
+            smartIndent: true
         });
 
-        function changeFile(fileName) {
-            currentFile = fileName;
-            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+        function renderTabs() {
+            const container = document.getElementById("tabs-container");
+            container.innerHTML = "";
+            openTabs.forEach(file => {
+                const tab = document.createElement("div");
+                tab.className = `tab ${file === activeFile ? 'active' : ''}`;
+                tab.innerText = file;
+                tab.onclick = () => switchTab(file);
+                container.appendChild(tab);
+            });
+        }
+
+        function switchTab(fileName) {
+            // Salva o estado atual da aba anterior antes de mudar
+            fileVirtualFS[activeFile] = editor.getValue();
             
-            if(fileName.endsWith('.lua')) {
-                document.getElementById('file-custom_events').classList.add('active');
-                editor.setOption("mode", "lua");
-                editor.setValue("function onCreate()\n    trace('Lua script loaded: " + fileName + "');\nend");
-            } else if(fileName.endsWith('.hx')) {
-                document.getElementById('file-PlayState').classList.add('active');
-                editor.setOption("mode", "haxe");
-                editor.setValue("class " + fileName.replace('.hx', '') + " {\n    public function new() {\n        trace('" + fileName + " initialized');\n    }\n}");
-            } else {
-                document.getElementById('file-Project').classList.add('active');
-                editor.setOption("mode", "xml");
-                editor.setValue("<project>\n    <meta title='Funkin Code Project' />\n</project>");
+            activeFile = fileName;
+            renderTabs();
+
+            // Configura a sintaxe correta
+            if (fileName.endsWith('.lua')) editor.setOption("mode", "lua");
+            else if (fileName.endsWith('.hx')) editor.setOption("mode", "haxe");
+            else if (fileName.endsWith('.xml')) editor.setOption("mode", "xml");
+
+            editor.setValue(fileVirtualFS[fileName]);
+            logToTerminal("Switched focus to: " + fileName);
+        }
+
+        function openFile(fileName) {
+            if (!openTabs.includes(fileName)) {
+                openTabs.push(fileName);
             }
-            logToTerminal("Switched to " + fileName);
+            switchTab(fileName);
         }
 
         function logToTerminal(message) {
-            const terminal = document.getElementById("output-log");
-            terminal.innerHTML += "<br>> " + message;
-            terminal.scrollTop = terminal.scrollHeight;
+            const consoleBody = document.getElementById("output-log");
+            consoleBody.innerHTML += "\n> " + message;
+            consoleBody.scrollTop = consoleBody.scrollHeight;
         }
 
-        function sendToCpp(action, data) {
+        function pipeToCpp(action, payload) {
             if (window.chrome && window.chrome.webview) {
-                const payload = JSON.stringify({ action: action, data: data });
-                window.chrome.webview.postMessage(payload);
+                window.chrome.webview.postMessage(JSON.stringify({ action: action, data: payload }));
             } else {
-                logToTerminal("[Web Preview] Webview2 target missing. Extracted action: " + action);
+                logToTerminal(`[Local Dev Mode] Outbound Trigger -> Action: "${action}"`);
             }
         }
 
-        function saveFile() {
-            logToTerminal("Saving: " + currentFile);
-            sendToCpp("save", { filename: currentFile, content: editor.getValue() });
+        function saveCurrentFile() {
+            fileVirtualFS[activeFile] = editor.getValue();
+            logToTerminal(`Saving process initialized for: ${activeFile}`);
+            pipeToCpp("save_file", {
+                filename: activeFile,
+                content: fileVirtualFS[activeFile]
+            });
         }
 
-        function runMod() {
-            logToTerminal("Compiling game...");
-            sendToCpp("run", { command: "lime test windows" });
+        function runModProject() {
+            logToTerminal("Compiling build package target...");
+            pipeToCpp("compile_project", { command: "lime test windows" });
         }
 
+        // Inicializa a UI carregando o primeiro arquivo
+        editor.setValue(fileVirtualFS[activeFile]);
+        renderTabs();
+
+        // Listener para retornos assíncronos vindos do C++
         if (window.chrome && window.chrome.webview) {
             window.chrome.webview.addEventListener('message', event => {
-                logToTerminal("[C++ Backend] " + event.data);
+                try {
+                    const response = JSON.parse(event.data);
+                    if (response.log) logToTerminal(`[System Core] ${response.log}`);
+                } catch(e) {
+                    logToTerminal(`[Raw Core Signal] ${event.data}`);
+                }
             });
         }
     </script>
