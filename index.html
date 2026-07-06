@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funkin Code - FNF Modding Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1a24;
+            --sidebar-color: #111116;
+            --accent-color: #ff007f;
+            --text-color: #ffffff;
+            --terminal-color: #0c0c0f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--sidebar-color);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            text-shadow: 2px 2px #00ffff;
+        }
+
+        .actions button {
+            background-color: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 6px 12px;
+            margin-left: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .actions button:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 150px);
+        }
+
+        sidebar {
+            width: 220px;
+            background-color: var(--sidebar-color);
+            border-right: 1px solid #2d2d3d;
+            padding: 15px;
+        }
+
+        sidebar h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-item {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .file-item:hover {
+            background-color: #252533;
+        }
+
+        .file-item.active {
+            background-color: #2d2d3d;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 14px;
+        }
+
+        .terminal {
+            height: 100px;
+            background-color: var(--terminal-color);
+            border-top: 2px solid #2d2d3d;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: #00ffcc;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">🎤 FUNKIN CODE v0.1</div>
+        <div class="actions">
+            <button onclick="saveFile()">💾 Save</button>
+            <button onclick="runMod()" style="color: #00ffcc;">▶️ Run Mod (Haxe/Lime)</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <sidebar>
+            <h3>Project Files</h3>
+            <ul class="file-list">
+                <li class="file-item active" onclick="changeFile('PlayState.hx')">📄 PlayState.hx</li>
+                <li class="file-item" onclick="changeFile('custom_events.lua')">📄 custom_events.lua</li>
+                <li class="file-item" onclick="changeFile('Project.xml')">⚙️ Project.xml</li>
+            </ul>
+        </sidebar>
+
+        <div class="editor-container">
+            <textarea id="code-editor">
+class PlayState extends MusicBeatState 
+{
+    override function create() 
+    {
+        super.create();
+        trace("Funkin Code loaded successfully!");
+    }
+}</textarea>
+        </div>
+    </div>
+
+    <div class="terminal" id="output-log">
+        [System] Funkin Code started. Awaiting C++ commands...
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/haxe/haxe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/lua/lua.min.js"></script>
+
+    <script>
+        const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+            lineNumbers: true,
+            theme: "dracula",
+            mode: "haxe"
+        });
+
+        function changeFile(fileName) {
+            logToTerminal("File changed to: " + fileName);
+            
+            if(fileName.endsWith('.lua')) {
+                editor.setOption("mode", "lua");
+                editor.setValue("function onCreate()\n    trace('Lua script loaded: " + fileName + "');\nend");
+            } else if(fileName.endsWith('.hx')) {
+                editor.setOption("mode", "haxe");
+                editor.setValue("class " + fileName.replace('.hx', '') + " {\n    public function new() {\n        trace('" + fileName + " initialized');\n    }\n}");
+            } else {
+                editor.setOption("mode", "xml");
+                editor.setValue("<project>\n    <meta title='Funkin Code Project' />\n</project>");
+            }
+        }
+
+        function logToTerminal(message) {
+            const terminal = document.getElementById("output-log");
+            terminal.innerHTML += "<br>> " + message;
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function saveFile() {
+            const codeContent = editor.getValue();
+            logToTerminal("Saving file... Sending data to C++ backend.");
+        }
+
+        function runMod() {
+            logToTerminal("Compiling and executing FNF mod via Lime... Triggering C++ system execution.");
+        }
+    </script>
+</body>
+</html>
