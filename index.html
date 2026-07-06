@@ -142,9 +142,9 @@
         <sidebar>
             <h3>Project Files</h3>
             <ul class="file-list">
-                <li class="file-item active" onclick="changeFile('PlayState.hx')">📄 PlayState.hx</li>
-                <li class="file-item" onclick="changeFile('custom_events.lua')">📄 custom_events.lua</li>
-                <li class="file-item" onclick="changeFile('Project.xml')">⚙️ Project.xml</li>
+                <li id="file-PlayState" class="file-item active" onclick="changeFile('PlayState.hx')">📄 PlayState.hx</li>
+                <li id="file-custom_events" class="file-item" onclick="changeFile('custom_events.lua')">📄 custom_events.lua</li>
+                <li id="file-Project" class="file-item" onclick="changeFile('Project.xml')">⚙️ Project.xml</li>
             </ul>
         </sidebar>
 
@@ -162,7 +162,7 @@ class PlayState extends MusicBeatState
     </div>
 
     <div class="terminal" id="output-log">
-        [System] Funkin Code started. Awaiting C++ commands...
+        [System] Funkin Code started. Awaiting C++ backend...
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
@@ -170,6 +170,7 @@ class PlayState extends MusicBeatState
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/lua/lua.min.js"></script>
 
     <script>
+        let currentFile = "PlayState.hx";
         const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
             lineNumbers: true,
             theme: "dracula",
@@ -177,18 +178,23 @@ class PlayState extends MusicBeatState
         });
 
         function changeFile(fileName) {
-            logToTerminal("File changed to: " + fileName);
+            currentFile = fileName;
+            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
             
             if(fileName.endsWith('.lua')) {
+                document.getElementById('file-custom_events').classList.add('active');
                 editor.setOption("mode", "lua");
                 editor.setValue("function onCreate()\n    trace('Lua script loaded: " + fileName + "');\nend");
             } else if(fileName.endsWith('.hx')) {
+                document.getElementById('file-PlayState').classList.add('active');
                 editor.setOption("mode", "haxe");
                 editor.setValue("class " + fileName.replace('.hx', '') + " {\n    public function new() {\n        trace('" + fileName + " initialized');\n    }\n}");
             } else {
+                document.getElementById('file-Project').classList.add('active');
                 editor.setOption("mode", "xml");
                 editor.setValue("<project>\n    <meta title='Funkin Code Project' />\n</project>");
             }
+            logToTerminal("Switched to " + fileName);
         }
 
         function logToTerminal(message) {
@@ -197,13 +203,29 @@ class PlayState extends MusicBeatState
             terminal.scrollTop = terminal.scrollHeight;
         }
 
+        function sendToCpp(action, data) {
+            if (window.chrome && window.chrome.webview) {
+                const payload = JSON.stringify({ action: action, data: data });
+                window.chrome.webview.postMessage(payload);
+            } else {
+                logToTerminal("[Web Preview] Webview2 target missing. Extracted action: " + action);
+            }
+        }
+
         function saveFile() {
-            const codeContent = editor.getValue();
-            logToTerminal("Saving file... Sending data to C++ backend.");
+            logToTerminal("Saving: " + currentFile);
+            sendToCpp("save", { filename: currentFile, content: editor.getValue() });
         }
 
         function runMod() {
-            logToTerminal("Compiling and executing FNF mod via Lime... Triggering C++ system execution.");
+            logToTerminal("Compiling game...");
+            sendToCpp("run", { command: "lime test windows" });
+        }
+
+        if (window.chrome && window.chrome.webview) {
+            window.chrome.webview.addEventListener('message', event => {
+                logToTerminal("[C++ Backend] " + event.data);
+            });
         }
     </script>
 </body>
